@@ -3,7 +3,6 @@ package com.example.studentregistration
 import android.os.Bundle
 import android.widget.Button
 import android.widget.EditText
-import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.ViewModelProvider
@@ -25,6 +24,7 @@ class MainActivity : AppCompatActivity() {
     //refrence variable for recycler view
     private lateinit var studentRecyclerView: RecyclerView
     private lateinit var adapter: StudentRecyclerViewAdapter
+    private var isListItemClicked = false
 
     private lateinit var selectedStudent: Student
 
@@ -44,12 +44,22 @@ class MainActivity : AppCompatActivity() {
         val factory = StuduentViewModelFactory(dao)
         viewModel = ViewModelProvider(this, factory).get(StudentViewModel::class.java)// Corrected line
 
-        saveButton.setOnClickListener{
-            saveStudentData()
-            claerInput()
+        saveButton.setOnClickListener {
+            if (isListItemClicked) {
+                updateStudentData()
+                clearInput()
+            } else {
+                saveStudentData()
+                clearInput()
+            }
         }
         clearButton.setOnClickListener{
-            claerInput()
+            if(isListItemClicked){
+                deleteStudentData()
+                clearInput()
+            }else {
+                clearInput()
+            }
         }
         initRecyclerView()
     }
@@ -72,8 +82,36 @@ class MainActivity : AppCompatActivity() {
         )
     }
 
+    private fun updateStudentData(){
+        viewModel.updateStudent(
+            Student(
+                selectedStudent.id,
+                nameEditText.text.toString(),
+                emailEditText.text.toString()
+            )
+        )
+        //selectedStudent =null
+        saveButton.text ="Save"
+        clearButton.text ="Clear"
+        isListItemClicked = false
+    }
+
+    private fun deleteStudentData(){
+        viewModel.deleteStudent(
+            Student(
+                selectedStudent.id,
+                nameEditText.text.toString(),
+                emailEditText.text.toString()
+            )
+        )
+      //  selectedStudent =null
+        saveButton.text ="Save"
+        clearButton.text ="Clear"
+        isListItemClicked = false
+    }
+
     //instance for clear the data
-    private fun claerInput(){
+    private fun clearInput(){
         nameEditText.setText("")
         emailEditText.setText("")
     }
@@ -96,11 +134,17 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun listItemClicked(student: Student){
-        Toast.makeText(
-            this,
-            "Student name is ${student.name}",
-            Toast.LENGTH_LONG
-        ).show()
+//        Toast.makeText(
+//            this,
+//            "Student name is ${student.name}",
+//            Toast.LENGTH_LONG
+//        ).show()
+        selectedStudent =student
+        saveButton.text ="Update"
+        clearButton.text ="Delete"
+        isListItemClicked = true
+        nameEditText.setText(selectedStudent.name)
+        emailEditText.setText(selectedStudent.email)
     }
 
 }
